@@ -6,33 +6,30 @@ import uuid
 load_dotenv()
 
 class Database:
-    def __init__(self):
-        # Priority 1: Streamlit secrets (for Streamlit Cloud)
-        # Priority 2: Environment variables (for local development)
+    def _init_(self):
+        # Try to get from environment variables first
+        self.url = os.getenv("SUPABASE_URL")
+        self.key = os.getenv("SUPABASE_KEY")
         
-        self.url = None
-        self.key = None
+        # If not found in env, try Streamlit secrets (only works in Streamlit)
+        if not self.url or not self.key:
+            try:
+                import streamlit as st
+                self.url = st.secrets.get("SUPABASE_URL", self.url)
+                self.key = st.secrets.get("SUPABASE_KEY", self.key)
+            except ImportError:
+                # Streamlit not available (running in FastAPI)
+                pass
         
-        # Try Streamlit secrets first
-        try:
-            import streamlit as st
-            self.url = st.secrets.get("SUPABASE_URL")
-            self.key = st.secrets.get("SUPABASE_KEY")
-            if self.url and self.key:
-                print("✅ Using Streamlit secrets")
-        except:
-            pass  # Streamlit not available or secrets not set
-        
-        # Fallback to environment variables
-        if not self.url:
-            self.url = os.getenv("SUPABASE_URL")
-        if not self.key:
-            self.key = os.getenv("SUPABASE_KEY")
-            if self.url and self.key:
-                print("✅ Using environment variables")
+        # If still not found, raise error
+        if not self.url or not self.key:
+            raise ValueError(
+                "Supabase credentials not found. "
+                "Please set SUPABASE_URL and SUPABASE_KEY environment variables "
+                "or create a .env file with these values."
+            )
         
         self.supabase = create_client(self.url, self.key)
-        print("✅ Supabase client initialized successfully")
     
     def get_user_profile(self, user_id):
         """Get user profile by ID"""
