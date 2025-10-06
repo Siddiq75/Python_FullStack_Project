@@ -31,13 +31,6 @@ class Database:
             if self.url and self.key:
                 print("✅ Using environment variables")
         
-        if not self.url or not self.key:
-            raise ValueError(
-                "Supabase credentials not found. Please set them in:\n"
-                "1. Streamlit Cloud Secrets (for deployment)\n"
-                "2. .env file (for local development)"
-            )
-        
         self.supabase = create_client(self.url, self.key)
         print("✅ Supabase client initialized successfully")
     
